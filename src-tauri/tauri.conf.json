@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Knowledge Assistant Demo 0",
-  "version": "0.0.0",
-  "identifier": "local.knowledge-assistant.demo0",
+  "productName": "Knowledge Assistant Demo 1",
+  "version": "0.1.0",
+  "identifier": "local.knowledge-assistant.demo1",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -10,17 +10,14 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [
-      {
-        "title": "个人知识助手 Demo 0",
-        "width": 1180,
-        "height": 760,
-        "minWidth": 860,
-        "minHeight": 620
-      }
-    ]
+    "windows": []
   },
   "bundle": {
     "active": false
+  },
+  "plugins": {
+    "global-shortcut": {
+      "shortcuts": ["Ctrl+Shift+Space"]
+    }
   }
 }
