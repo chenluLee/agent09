@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { scanVault } from "./scanner";
 import type { ParsedNote } from "./types";
+import { segmentCJK } from "./cjk";
 
 interface BuildIndexInput {
   vaultPath: string;
@@ -65,10 +66,10 @@ function insertNote(db: Database.Database, note: ParsedNote) {
 
   db.prepare("insert into note_fts(document_id, title, tags, path, body) values(?, ?, ?, ?, ?)").run(
     note.documentId,
-    note.title,
-    note.tags.join(" "),
-    note.path,
-    note.plainText
+    segmentCJK(note.title),
+    note.tags.map((t) => segmentCJK(t)).join(" "),
+    segmentCJK(note.path),
+    segmentCJK(note.plainText)
   );
 }
 

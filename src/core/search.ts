@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import { existsSync } from "node:fs";
 import type { MatchReason, SearchResult } from "./types";
+import { cjkBigrams, cjkScoringTerms, restoreCJKSpaces } from "./cjk";
 
 interface SearchInput {
   indexPath: string;
@@ -42,7 +43,11 @@ export function searchIndex(input: SearchInput): SearchResult[] {
     `).all(toFtsQuery(normalizedQuery)) as Row[];
 
     return rows
-      .map((row) => scoreRow(row, normalizedQuery))
+      .map((row) => {
+        const result = scoreRow(row, normalizedQuery);
+        result.snippet = restoreCJKSpaces(result.snippet);
+        return result;
+      })
       .sort((a, b) => b.score - a.score)
       .slice(0, input.limit);
   } finally {
@@ -51,7 +56,7 @@ export function searchIndex(input: SearchInput): SearchResult[] {
 }
 
 function scoreRow(row: Row, query: string): SearchResult {
-  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const terms = cjkScoringTerms(query.toLowerCase());
   const title = row.title.toLowerCase();
   const path = row.path.toLowerCase();
   const tags = JSON.parse(row.tags_json) as string[];
@@ -68,12 +73,14 @@ function scoreRow(row: Row, query: string): SearchResult {
   scoreBreakdown.title = titleHits * 8;
   scoreBreakdown.tags = tagHits * 5;
   scoreBreakdown.backlinks = backlinkHits * 3;
+  scoreBreakdown.content = contentBonus(terms, row.snippet);
   scoreBreakdown.phrase = phraseBonus(query, title, row.snippet.toLowerCase());
   scoreBreakdown.recency = recentBonus(row.modified_time_ms);
 
   if (scoreBreakdown.title > 0) reasons.push("title match");
   if (scoreBreakdown.tags > 0) reasons.push("tag match");
   if (scoreBreakdown.backlinks > 0) reasons.push("backlink match");
+  if (scoreBreakdown.content > 0) reasons.push("content match");
   if (scoreBreakdown.phrase > 0) reasons.push("phrase match");
   if (scoreBreakdown.recency > 0) reasons.push("recently edited");
 
@@ -95,11 +102,43 @@ function normalizeQuery(query: string): string {
 }
 
 function toFtsQuery(query: string): string {
-  return query
-    .split(/\s+/)
-    .filter((term) => term.length > 1)
-    .map((term) => `"${term.replace(/"/g, "")}"`)
-    .join(" OR ");
+  const parts = query.split(/(\p{Unified_Ideograph}+)/gu);
+  const terms: string[] = [];
+
+  for (const part of parts) {
+    if (!part) continue;
+
+    if (/\p{Unified_Ideograph}/u.test(part)) {
+      // Exact phrase: "稳 定 编 码"
+      const phrase = [...part].filter((c) => c.trim()).join(" ");
+      if (phrase) {
+        terms.push(`"${phrase}"`);
+      }
+      // Overlapping bigrams for recall: "稳 定" OR "定 编" OR "编 码"
+      const bigrams = cjkBigrams(part);
+      for (const bg of bigrams) {
+        if (bg !== phrase) {
+          terms.push(`"${bg}"`);
+        }
+      }
+    } else {
+      const words = part
+        .split(/\s+/)
+        .map((w) => w.trim())
+        .filter((w) => w.length > 1);
+      for (const word of words) {
+        terms.push(`"${word.replace(/"/g, "")}"`);
+      }
+    }
+  }
+
+  return terms.join(" OR ");
+}
+
+function contentBonus(terms: string[], snippet: string): number {
+  const snippetText = snippet.replace(/<\/?mark>/g, "").toLowerCase();
+  const hits = terms.filter((term) => snippetText.includes(term)).length;
+  return hits * 2;
 }
 
 function phraseBonus(query: string, title: string, snippet: string): number {

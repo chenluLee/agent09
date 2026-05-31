@@ -35,7 +35,7 @@ export interface SearchResult {
   scoreBreakdown: Record<string, number>;
 }
 
-export type MatchReason = "title match" | "tag match" | "backlink match" | "phrase match" | "recently edited";
+export type MatchReason = "title match" | "tag match" | "backlink match" | "content match" | "phrase match" | "recently edited";
 
 export interface RetrievalRequest {
   transcript: string;
