@@ -1,4 +1,5 @@
 import Database from "better-sqlite3";
+import { existsSync } from "node:fs";
 import type { MatchReason, SearchResult } from "./types";
 
 interface SearchInput {
@@ -19,7 +20,7 @@ interface Row {
 
 export function searchIndex(input: SearchInput): SearchResult[] {
   const normalizedQuery = normalizeQuery(input.query);
-  if (!normalizedQuery) {
+  if (!normalizedQuery || !existsSync(input.indexPath)) {
     return [];
   }
 

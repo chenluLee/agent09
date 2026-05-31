@@ -1,11 +1,15 @@
 import cors from "@fastify/cors";
 import Fastify from "fastify";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { createLocalCommands } from "./localCommands";
 
 const port = Number(process.env.KA_DEMO0_PORT ?? 3760);
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+const defaultIndexPath = path.resolve(projectRoot, "..", "knowledge-assistant-demo0.sqlite");
 const commands = createLocalCommands({
-  indexPath: process.env.KA_DEMO0_INDEX ?? "knowledge-assistant-demo0.sqlite",
+  indexPath: process.env.KA_DEMO0_INDEX ?? defaultIndexPath,
   sourceId: "demo",
   vaultName: process.env.KA_DEMO0_VAULT_NAME ?? "Demo Vault"
 });

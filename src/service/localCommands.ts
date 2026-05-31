@@ -1,9 +1,13 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { buildIndex, type IndexStats } from "../core/indexer";
 import { retrieveRelatedNotes } from "../core/retrieval";
 import { searchIndex } from "../core/search";
 import { validateVault } from "../core/scanner";
 import type { RetrievalRequest, RetrievalResult, SearchResult, VaultValidation } from "../core/types";
 import { buildObsidianOpenUri } from "../core/uri";
+
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 export interface DemoCommands {
   validateVault(vaultPath: string): Promise<VaultValidation>;
@@ -38,7 +42,7 @@ export function createLocalCommands(options: LocalCommandOptions): DemoCommands 
 }
 
 export const demoCommands = createLocalCommands({
-  indexPath: "knowledge-assistant-demo0.sqlite",
+  indexPath: path.join(projectRoot, "knowledge-assistant-demo0.sqlite"),
   sourceId: "demo",
   vaultName: "Demo Vault"
 });
