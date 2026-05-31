@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Knowledge Assistant Demo 0",
+        "title": "个人知识助手 Demo 0",
         "width": 1180,
         "height": 760,
         "minWidth": 860,

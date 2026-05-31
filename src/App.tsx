@@ -3,32 +3,32 @@ import { useMemo, useState } from "react";
 import { demoCommands } from "./api/commands";
 import type { RetrievalResult } from "./core/types";
 
-const defaultTranscript = "Demo 0 typed transcript retrieval with match reasons and Obsidian URI opening.";
+const defaultTranscript = "演示 0：输入文本检索，显示匹配原因并支持通过 Obsidian URI 打开笔记。";
 
 export function App() {
   const [vaultPath, setVaultPath] = useState("examples/demo-vault");
   const [transcript, setTranscript] = useState(defaultTranscript);
-  const [status, setStatus] = useState("Ready");
+  const [status, setStatus] = useState("就绪");
   const [result, setResult] = useState<RetrievalResult | null>(null);
   const [version, setVersion] = useState(0);
 
   const topNotes = useMemo(() => result?.notes ?? [], [result]);
 
   async function indexVault() {
-    setStatus("Indexing vault...");
+    setStatus("正在索引知识库...");
     const validation = await demoCommands.validateVault(vaultPath);
     if (!validation.valid) {
-      setStatus("Vault invalid: select a folder with Markdown files.");
+      setStatus("知识库无效：请选择包含 Markdown 文件的文件夹。");
       return;
     }
     const stats = await demoCommands.startIndexing(vaultPath);
-    setStatus(`Indexed ${stats.documentCount} notes and ${stats.chunkCount} chunks.`);
+    setStatus(`已索引 ${stats.documentCount} 篇笔记，共 ${stats.chunkCount} 个片段。`);
   }
 
   async function retrieve() {
     const nextVersion = version + 1;
     setVersion(nextVersion);
-    setStatus("Retrieving related notes...");
+    setStatus("正在检索相关笔记...");
     const nextResult = await demoCommands.retrieve({
       transcript,
       windowId: "manual",
@@ -36,7 +36,7 @@ export function App() {
       limit: 5
     });
     setResult(nextResult);
-    setStatus(`Retrieved ${nextResult.notes.length} notes in ${nextResult.elapsedMs} ms.`);
+    setStatus(`检索到 ${nextResult.notes.length} 篇相关笔记，耗时 ${nextResult.elapsedMs} 毫秒。`);
   }
 
   async function openNote(path: string) {
@@ -46,36 +46,36 @@ export function App() {
 
   return (
     <main className="app-shell">
-      <section className="toolbar" aria-label="Vault setup">
+      <section className="toolbar" aria-label="知识库设置">
         <div>
-          <h1>Knowledge Assistant Demo 0</h1>
+          <h1>个人知识助手 Demo 0</h1>
           <p>{status}</p>
         </div>
         <label className="field">
-          <span>Vault path</span>
+          <span>知识库路径</span>
           <input value={vaultPath} onChange={(event) => setVaultPath(event.target.value)} />
         </label>
         <button className="icon-button text-button" type="button" onClick={indexVault}>
           <RefreshCw size={18} />
-          Index vault
+          索引知识库
         </button>
       </section>
 
       <section className="workspace">
         <form className="transcript-panel" onSubmit={(event) => { event.preventDefault(); void retrieve(); }}>
           <label className="field">
-            <span>Manual transcript</span>
+            <span>输入文本</span>
             <textarea value={transcript} onChange={(event) => setTranscript(event.target.value)} rows={9} />
           </label>
           <button className="icon-button text-button primary" type="submit">
             <Search size={18} />
-            Retrieve notes
+            检索笔记
           </button>
         </form>
 
-        <section className="results-panel" aria-label="Related notes">
+        <section className="results-panel" aria-label="相关笔记">
           {topNotes.length === 0 ? (
-            <div className="empty-state">No related notes yet.</div>
+            <div className="empty-state">暂无相关笔记。</div>
           ) : (
             topNotes.map((note) => (
               <article className="result-card" key={note.documentId}>
@@ -84,7 +84,7 @@ export function App() {
                     <h2>{note.title}</h2>
                     <p>{note.path}</p>
                   </div>
-                  <button className="icon-button" type="button" onClick={() => void openNote(note.path)} aria-label={`Open ${note.title}`}>
+                  <button className="icon-button" type="button" onClick={() => void openNote(note.path)} aria-label={`打开 ${note.title}`}>
                     <ExternalLink size={18} />
                   </button>
                 </div>
@@ -93,7 +93,7 @@ export function App() {
                   {note.reasons.map((reason) => <span key={reason}>{reason}</span>)}
                 </div>
                 <details>
-                  <summary>Score {note.score}</summary>
+                  <summary>评分 {note.score}</summary>
                   <pre>{JSON.stringify(note.scoreBreakdown, null, 2)}</pre>
                 </details>
               </article>
