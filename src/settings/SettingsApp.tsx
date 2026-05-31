@@ -23,7 +23,7 @@ export function SettingsApp() {
 
   async function loadConfig() {
     try {
-      const loaded = await commands.getConfig() as AppConfig;
+      const loaded = await commands.getConfig() as unknown as AppConfig;
       setConfig(loaded);
       setStatus("设置已加载。");
     } catch {
@@ -34,7 +34,7 @@ export function SettingsApp() {
   async function handleSave() {
     try {
       setStatus("正在保存...");
-      await commands.saveConfig(config);
+      await commands.saveConfig(config as unknown as Record<string, unknown>);
       setStatus("设置已保存。");
     } catch {
       setStatus("保存失败。");

@@ -64,7 +64,7 @@ describe("createFetchCommands config commands", () => {
     const commands = createFetchCommands("http://test", { openUri: false });
     await commands.saveConfig({ vaultPath: "/test", vaultName: "Test" });
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][0]).toBe("http://test/config");
+    expect((fetchMock.mock.calls as string[][])[0][0]).toBe("http://test/config");
   });
 
   it("getAsrConnectUrl posts credentials and returns URL", async () => {
@@ -77,6 +77,6 @@ describe("createFetchCommands config commands", () => {
     const commands = createFetchCommands("http://test", { openUri: false });
     const url = await commands.getAsrConnectUrl("test-app-id", "test-api-key");
     expect(url).toBe("wss://rtasr.xfyun.cn/v1/ws?appid=test");
-    expect(fetchMock.mock.calls[0][0]).toBe("http://test/asr/connect-url");
+    expect((fetchMock.mock.calls as string[][])[0][0]).toBe("http://test/asr/connect-url");
   });
 });
