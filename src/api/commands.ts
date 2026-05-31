@@ -7,6 +7,9 @@ export interface DemoCommands {
   retrieve(request: RetrievalRequest): Promise<RetrievalResult>;
   search(query: string): Promise<SearchResult[]>;
   openObsidianUri(filePath: string): Promise<string>;
+  getConfig(): Promise<Record<string, unknown>>;
+  saveConfig(config: Record<string, unknown>): Promise<Record<string, unknown>>;
+  getAsrConnectUrl(appId: string, apiKey: string): Promise<string>;
 }
 
 interface FetchCommandOptions {
@@ -33,6 +36,16 @@ export function createFetchCommands(baseUrl = "http://127.0.0.1:3760", options: 
         await openUri(response.uri);
       }
       return response.uri;
+    },
+    getConfig() {
+      return get(`${baseUrl}/config`);
+    },
+    saveConfig(config: Record<string, unknown>) {
+      return post(`${baseUrl}/config`, config);
+    },
+    async getAsrConnectUrl(appId: string, apiKey: string) {
+      const result = await post<{ url: string }>(`${baseUrl}/asr/connect-url`, { appId, apiKey });
+      return result.url;
     }
   };
 }
@@ -42,6 +55,17 @@ async function post<T>(url: string, body: unknown): Promise<T> {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body)
+  });
+  if (!response.ok) {
+    throw new Error(`KA_SERVICE_REQUEST_FAILED: ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}
+
+async function get<T>(url: string): Promise<T> {
+  const response = await fetch(url, {
+    method: "GET",
+    headers: { "content-type": "application/json" }
   });
   if (!response.ok) {
     throw new Error(`KA_SERVICE_REQUEST_FAILED: ${response.status}`);
