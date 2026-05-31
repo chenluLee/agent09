@@ -17,7 +17,13 @@ describe("buildObsidianOpenUri", () => {
   });
 
   it("blocks traversal and absolute paths", () => {
-    expect(() => buildObsidianOpenUri({ vaultName: "Demo", filePath: "../secret.md" })).toThrow("KA_PATH_TRAVERSAL");
-    expect(() => buildObsidianOpenUri({ vaultName: "Demo", filePath: "/tmp/secret.md" })).toThrow("KA_ABSOLUTE_PATH");
+    expect(() => buildObsidianOpenUri({ vaultName: "Demo", filePath: "../secret.md" })).toThrow();
+    try { buildObsidianOpenUri({ vaultName: "Demo", filePath: "../secret.md" }); } catch (e) {
+      expect((e as { code: string }).code).toBe("KA_PATH_TRAVERSAL");
+    }
+    expect(() => buildObsidianOpenUri({ vaultName: "Demo", filePath: "/tmp/secret.md" })).toThrow();
+    try { buildObsidianOpenUri({ vaultName: "Demo", filePath: "/tmp/secret.md" }); } catch (e) {
+      expect((e as { code: string }).code).toBe("KA_ABSOLUTE_PATH");
+    }
   });
 });
