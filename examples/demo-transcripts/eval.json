@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "demo0-core-retrieval",
+      "transcript": "下周我要演示 typed transcript retrieval，先不用语音，重点是 Demo 0 的样例库、FTS 索引、match reasons 和 Obsidian 打开。",
+      "expectedTop": "projects/knowledge-assistant.md",
+      "acceptableAlternatives": [
+        "areas/retrieval-evaluation.md",
+        "references/sqlite-fts5.md"
+      ],
+      "falsePositives": [
+        "areas/coffee-roasting.md"
+      ]
+    },
+    {
+      "id": "uri-hardening",
+      "transcript": "我们要测试 Obsidian URI，中文路径、空格、井号和问号都要稳定编码。",
+      "expectedTop": "references/obsidian-uri.md",
+      "acceptableAlternatives": [
+        "中文/会议纪要 空格.md",
+        "中文/特殊字符 #问号?.md"
+      ],
+      "falsePositives": [
+        "areas/chinese-asr.md"
+      ]
+    },
+    {
+      "id": "ranking-quality",
+      "transcript": "eval fixtures 应该记录 expected top notes、acceptable alternatives 和 false positives，用来衡量 ranking quality。",
+      "expectedTop": "areas/retrieval-evaluation.md",
+      "acceptableAlternatives": [
+        "references/sqlite-fts5.md"
+      ],
+      "falsePositives": [
+        "areas/privacy-retention.md"
+      ]
+    },
+    {
+      "id": "coffee-negative-control",
+      "transcript": "我在调整咖啡豆烘焙曲线，关注 turning point、first crack 和 development time。",
+      "expectedTop": "areas/coffee-roasting.md",
+      "acceptableAlternatives": [
+        "references/sensor-calibration.md"
+      ],
+      "falsePositives": [
+        "projects/knowledge-assistant.md"
+      ]
+    }
+  ]
+}
