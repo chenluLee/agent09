@@ -30,21 +30,33 @@ vi.mock("./api/commands", () => ({
 }));
 
 describe("App", () => {
+  it("auto-indexes vault on mount", async () => {
+    render(<App />);
+    await screen.findByText(/已索引 20 篇笔记/);
+  });
+
   it("runs the manual transcript retrieval flow", async () => {
     render(<App />);
 
-    fireEvent.change(screen.getByLabelText("Vault path"), { target: { value: "examples/demo-vault" } });
-    fireEvent.click(screen.getByRole("button", { name: "Index vault" }));
-    await screen.findByText(/Indexed 20 notes/);
+    // Wait for auto-index to complete
+    await screen.findByText(/已索引 20 篇笔记/);
 
-    fireEvent.change(screen.getByLabelText("Manual transcript"), {
-      target: { value: "Demo 0 typed transcript retrieval with match reasons" }
+    fireEvent.change(screen.getByLabelText("输入文本"), {
+      target: { value: "演示文本检索，匹配原因和 Obsidian URI 打开" }
     });
-    fireEvent.click(screen.getByRole("button", { name: "Retrieve notes" }));
+    fireEvent.click(screen.getByRole("button", { name: "检索笔记" }));
 
     await waitFor(() => {
       expect(screen.getByText("Knowledge Assistant Demo 0")).toBeInTheDocument();
     });
     expect(screen.getAllByText(/title match|phrase match/).length).toBeGreaterThan(0);
+  });
+
+  it("shows prompt to index first when not indexed", async () => {
+    render(<App />);
+    // Before auto-index completes, the "index first" message is shown
+    expect(screen.getByText("请先索引知识库后再检索。")).toBeInTheDocument();
+    // After auto-index completes, the message changes
+    await screen.findByText(/已索引 20 篇笔记/);
   });
 });

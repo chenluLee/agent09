@@ -1,5 +1,5 @@
 import { ExternalLink, RefreshCw, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { demoCommands } from "./api/commands";
 import type { RetrievalResult } from "./core/types";
 
@@ -11,8 +11,13 @@ export function App() {
   const [status, setStatus] = useState("就绪");
   const [result, setResult] = useState<RetrievalResult | null>(null);
   const [version, setVersion] = useState(0);
+  const [indexed, setIndexed] = useState(false);
 
   const topNotes = useMemo(() => result?.notes ?? [], [result]);
+
+  useEffect(() => {
+    void indexVault();
+  }, []);
 
   async function indexVault() {
     setStatus("正在索引知识库...");
@@ -23,9 +28,14 @@ export function App() {
     }
     const stats = await demoCommands.startIndexing(vaultPath);
     setStatus(`已索引 ${stats.documentCount} 篇笔记，共 ${stats.chunkCount} 个片段。`);
+    setIndexed(true);
   }
 
   async function retrieve() {
+    if (!indexed) {
+      setStatus("请先点击「索引知识库」构建索引后再检索。");
+      return;
+    }
     const nextVersion = version + 1;
     setVersion(nextVersion);
     setStatus("正在检索相关笔记...");
@@ -75,7 +85,7 @@ export function App() {
 
         <section className="results-panel" aria-label="相关笔记">
           {topNotes.length === 0 ? (
-            <div className="empty-state">暂无相关笔记。</div>
+            <div className="empty-state">{indexed ? "暂无相关笔记。" : "请先索引知识库后再检索。"}</div>
           ) : (
             topNotes.map((note) => (
               <article className="result-card" key={note.documentId}>
