@@ -35,3 +35,48 @@ describe("createFetchCommands", () => {
     ]);
   });
 });
+
+describe("createFetchCommands config commands", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("getConfig returns config from server", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ vaultPath: "/test", vaultName: "Test" })
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const commands = createFetchCommands("http://test", { openUri: false });
+    const result = await commands.getConfig();
+    expect(result).toEqual({ vaultPath: "/test", vaultName: "Test" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("saveConfig posts config to server", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ vaultPath: "/test", vaultName: "Test" })
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const commands = createFetchCommands("http://test", { openUri: false });
+    await commands.saveConfig({ vaultPath: "/test", vaultName: "Test" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://test/config");
+  });
+
+  it("getAsrConnectUrl posts credentials and returns URL", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ url: "wss://rtasr.xfyun.cn/v1/ws?appid=test" })
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const commands = createFetchCommands("http://test", { openUri: false });
+    const url = await commands.getAsrConnectUrl("test-app-id", "test-api-key");
+    expect(url).toBe("wss://rtasr.xfyun.cn/v1/ws?appid=test");
+    expect(fetchMock.mock.calls[0][0]).toBe("http://test/asr/connect-url");
+  });
+});
