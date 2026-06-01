@@ -65,6 +65,10 @@ export function SettingsApp() {
   }
 
   async function handleCopyHotwords() {
+    if (!navigator.clipboard) {
+      setHotwordStatus("复制失败：剪贴板 API 不可用。");
+      return;
+    }
     try {
       await navigator.clipboard.writeText(hotwords.join("\n"));
       setHotwordStatus("已复制到剪贴板。");
@@ -143,7 +147,12 @@ export function SettingsApp() {
       <section className="settings-section">
         <h2>热词管理</h2>
         <p>从已索引的标签中提取纯中文、不超过 7 字的热词，用于讯飞语音识别热词表。</p>
-        <button className="settings-btn" type="button" onClick={handleExtractHotwords}>
+        <button
+          className="settings-btn"
+          type="button"
+          onClick={handleExtractHotwords}
+          disabled={hotwordStatus === "正在提取..."}
+        >
           <RefreshCw size={16} />
           提取热词
         </button>
