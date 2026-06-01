@@ -13,8 +13,7 @@ export function extractHotwords(input: HotwordsInput): string[] {
   let db: Database.Database;
   try {
     db = new Database(input.indexPath, { readonly: true });
-  } catch (err) {
-    console.error("Failed to open database:", err);
+  } catch {
     return [];
   }
 
@@ -32,8 +31,8 @@ export function extractHotwords(input: HotwordsInput): string[] {
             }
           }
         }
-      } catch (err) {
-        console.error("Failed to parse tags_json:", err);
+      } catch {
+        // skip malformed tags_json rows
       }
     }
 
@@ -41,8 +40,7 @@ export function extractHotwords(input: HotwordsInput): string[] {
       .filter(([tag]) => isPureCJK(tag) && [...tag].length <= 7)
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "zh"))
       .map(([tag]) => tag);
-  } catch (err) {
-    console.error("Failed to query database:", err);
+  } catch {
     return [];
   } finally {
     db.close();

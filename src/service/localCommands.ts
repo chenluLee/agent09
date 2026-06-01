@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildIndex, type IndexStats } from "../core/indexer";
@@ -42,9 +41,6 @@ export function createLocalCommands(options: LocalCommandOptions): DemoCommands 
       return buildObsidianOpenUri({ vaultName: options.vaultName, filePath });
     },
     async getHotwords() {
-      if (!existsSync(options.indexPath)) {
-        throw new Error("Index database not found");
-      }
       return extractHotwords({ indexPath: options.indexPath });
     }
   };
