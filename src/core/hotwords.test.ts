@@ -119,4 +119,49 @@ describe("extractHotwords", () => {
       expect(result).toEqual(["编程", "算法"]);
     });
   });
+
+  it("returns empty array when index is corrupt or missing tables", async () => {
+    await withTempDir("hotwords", async (dir) => {
+      const indexPath = path.join(dir, "corrupt.sqlite");
+      const db = new Database(indexPath);
+      db.exec("create table if not exists wrong_table (id integer);");
+      db.close();
+
+      const result = extractHotwords({ indexPath });
+      expect(result).toEqual([]);
+    });
+  });
+
+  it("ignores malformed tags_json rows and extracts valid rows", async () => {
+    await withTempDir("hotwords", async (dir) => {
+      const indexPath = path.join(dir, "malformed.sqlite");
+      const db = new Database(indexPath);
+      db.exec(`
+        create table if not exists sources (
+          source_id text primary key,
+          source_type text not null,
+          root_path text not null
+        );
+        create table if not exists documents (
+          document_id text primary key,
+          source_id text not null references sources(source_id),
+          source_type text not null,
+          path text not null,
+          title text not null,
+          content_hash text not null,
+          frontmatter_json text not null,
+          tags_json text not null,
+          links_json text not null,
+          modified_time_ms integer not null
+        );
+        insert into sources values('test', 'obsidian', '/test');
+        insert into documents values('doc-0', 'test', 'obsidian', 'note-0.md', 'Note 0', '', '{}', 'invalid-json{', '[]', 0);
+        insert into documents values('doc-1', 'test', 'obsidian', 'note-1.md', 'Note 1', '', '{}', '["人工智能"]', '[]', 0);
+      `);
+      db.close();
+
+      const result = extractHotwords({ indexPath });
+      expect(result).toEqual(["人工智能"]);
+    });
+  });
 });
