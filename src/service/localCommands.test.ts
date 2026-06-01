@@ -64,12 +64,11 @@ This contains inline tag #机器学习 and another #深度学习.
     });
   });
 
-  it("getHotwords returns empty array when no index exists", async () => {
+  it("getHotwords throws when no index exists", async () => {
     await withTempDir("hotwords-empty", async (dir) => {
       const indexPath = path.join(dir, "nonexistent.sqlite");
       const commands = createLocalCommands({ indexPath, sourceId: "demo", vaultName: "Demo Vault" });
-      const hotwords = await commands.getHotwords();
-      expect(hotwords).toEqual([]);
+      await expect(commands.getHotwords()).rejects.toThrow("Index database not found");
     });
   });
 });

@@ -38,7 +38,7 @@ export function extractHotwords(input: HotwordsInput): string[] {
     }
 
     return [...tagCounts.entries()]
-      .filter(([tag]) => isPureCJK(tag) && tag.length <= 7)
+      .filter(([tag]) => isPureCJK(tag) && [...tag].length <= 7)
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "zh"))
       .map(([tag]) => tag);
   } catch (err) {
