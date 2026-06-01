@@ -86,4 +86,8 @@ app.post("/asr/connect-url", async (request) => {
   return { url: buildIflytekAuthUrl(body.appId, body.apiKey, body.apiSecret) };
 });
 
+app.get("/hotwords", async () => {
+  return commands.getHotwords();
+});
+
 await app.listen({ host: "127.0.0.1", port });
