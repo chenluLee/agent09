@@ -6,6 +6,7 @@ import { searchIndex } from "../core/search";
 import { validateVault } from "../core/scanner";
 import type { RetrievalRequest, RetrievalResult, SearchResult, VaultValidation } from "../core/types";
 import { buildObsidianOpenUri } from "../core/uri";
+import { extractHotwords } from "../core/hotwords";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -15,6 +16,7 @@ export interface DemoCommands {
   retrieve(request: RetrievalRequest): Promise<RetrievalResult>;
   search(query: string): Promise<SearchResult[]>;
   openObsidianUri(filePath: string): Promise<string>;
+  getHotwords(): Promise<string[]>;
 }
 
 interface LocalCommandOptions {
@@ -37,6 +39,9 @@ export function createLocalCommands(options: LocalCommandOptions): DemoCommands 
     },
     async openObsidianUri(filePath: string) {
       return buildObsidianOpenUri({ vaultName: options.vaultName, filePath });
+    },
+    async getHotwords() {
+      return extractHotwords({ indexPath: options.indexPath });
     }
   };
 }
