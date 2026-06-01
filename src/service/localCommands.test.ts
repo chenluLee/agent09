@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { withTempDir } from "../test/tmp";
@@ -33,10 +34,28 @@ describe("local command adapter", () => {
   it("getHotwords returns valid hotwords after indexing", async () => {
     await withTempDir("hotwords-int", async (dir) => {
       const indexPath = path.join(dir, "index.sqlite");
+      const vaultPath = path.join(dir, "vault");
+      fs.mkdirSync(vaultPath);
+      
+      // Create a markdown file with Chinese tags in frontmatter and content
+      const noteContent = `---
+tags: [人工智能]
+---
+# Test Note
+This contains inline tag #机器学习 and another #深度学习.
+`;
+      fs.writeFileSync(path.join(vaultPath, "note.md"), noteContent, "utf8");
+
       const commands = createLocalCommands({ indexPath, sourceId: "demo", vaultName: "Demo Vault" });
-      await commands.startIndexing("examples/demo-vault");
+      await commands.startIndexing(vaultPath);
+      
       const hotwords = await commands.getHotwords();
-      expect(Array.isArray(hotwords)).toBe(true);
+      
+      // Assertions
+      expect(hotwords).toContain("人工智能");
+      expect(hotwords).toContain("机器学习");
+      expect(hotwords).toContain("深度学习");
+      
       for (const word of hotwords) {
         expect(word.length).toBeLessThanOrEqual(7);
         expect([...word].every((ch) => /\p{Unified_Ideograph}/u.test(ch))).toBe(true);
