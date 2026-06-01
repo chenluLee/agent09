@@ -84,10 +84,10 @@ describe("extractHotwords", () => {
   it("filters to tags with 7 or fewer characters", async () => {
     await withTempDir("hotwords", async (dir) => {
       const indexPath = path.join(dir, "test.sqlite");
-      seedDb(indexPath, [["短词", "刚好七个字没问题", "这是超过七个字的标签应该被过滤"]]);
+      seedDb(indexPath, [["短词", "刚好是七个字符", "这是超过七个字的标签应该被过滤"]]);
       const result = extractHotwords({ indexPath });
       expect(result).toContain("短词");
-      expect(result).toContain("刚好七个字没问题");
+      expect(result).toContain("刚好是七个字符");
       expect(result).not.toContain("这是超过七个字的标签应该被过滤");
     });
   });
