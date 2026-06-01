@@ -80,3 +80,23 @@ describe("createFetchCommands config commands", () => {
     expect((fetchMock.mock.calls as string[][])[0][0]).toBe("http://test/asr/connect-url");
   });
 });
+
+describe("createFetchCommands getHotwords", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("getHotwords fetches from /hotwords endpoint", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ["人工智能", "机器学习", "深度学习"]
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const commands = createFetchCommands("http://test", { openUri: false });
+    const result = await commands.getHotwords();
+    expect(result).toEqual(["人工智能", "机器学习", "深度学习"]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect((fetchMock.mock.calls as string[][])[0][0]).toBe("http://test/hotwords");
+  });
+});
