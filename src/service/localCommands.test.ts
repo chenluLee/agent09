@@ -29,4 +29,28 @@ describe("local command adapter", () => {
       );
     });
   });
+
+  it("getHotwords returns valid hotwords after indexing", async () => {
+    await withTempDir("hotwords-int", async (dir) => {
+      const indexPath = path.join(dir, "index.sqlite");
+      const commands = createLocalCommands({ indexPath, sourceId: "demo", vaultName: "Demo Vault" });
+      await commands.startIndexing("examples/demo-vault");
+      const hotwords = await commands.getHotwords();
+      expect(Array.isArray(hotwords)).toBe(true);
+      for (const word of hotwords) {
+        expect(word.length).toBeLessThanOrEqual(7);
+        expect([...word].every((ch) => /\p{Unified_Ideograph}/u.test(ch))).toBe(true);
+      }
+      expect(new Set(hotwords).size).toBe(hotwords.length);
+    });
+  });
+
+  it("getHotwords returns empty array when no index exists", async () => {
+    await withTempDir("hotwords-empty", async (dir) => {
+      const indexPath = path.join(dir, "nonexistent.sqlite");
+      const commands = createLocalCommands({ indexPath, sourceId: "demo", vaultName: "Demo Vault" });
+      const hotwords = await commands.getHotwords();
+      expect(hotwords).toEqual([]);
+    });
+  });
 });
