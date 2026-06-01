@@ -3,43 +3,46 @@ import Database from "better-sqlite3";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { withTempDir } from "../test/tmp";
+import { extractHotwords } from "./hotwords";
 
 function seedDb(indexPath: string, tagSets: string[][]) {
   const db = new Database(indexPath);
-  db.exec(`
-    create table if not exists sources (
-      source_id text primary key,
-      source_type text not null,
-      root_path text not null
+  try {
+    db.exec(`
+      create table if not exists sources (
+        source_id text primary key,
+        source_type text not null,
+        root_path text not null
+      );
+      create table if not exists documents (
+        document_id text primary key,
+        source_id text not null references sources(source_id),
+        source_type text not null,
+        path text not null,
+        title text not null,
+        content_hash text not null,
+        frontmatter_json text not null,
+        tags_json text not null,
+        links_json text not null,
+        modified_time_ms integer not null
+      );
+      insert into sources values('test', 'obsidian', '/test');
+    `);
+    const insert = db.prepare(
+      `insert into documents(document_id, source_id, source_type, path, title,
+         content_hash, frontmatter_json, tags_json, links_json, modified_time_ms)
+       values(?, 'test', 'obsidian', ?, ?, '', '{}', ?, '[]', 0)`
     );
-    create table if not exists documents (
-      document_id text primary key,
-      source_id text not null references sources(source_id),
-      source_type text not null,
-      path text not null,
-      title text not null,
-      content_hash text not null,
-      frontmatter_json text not null,
-      tags_json text not null,
-      links_json text not null,
-      modified_time_ms integer not null
-    );
-    insert into sources values('test', 'obsidian', '/test');
-  `);
-  const insert = db.prepare(
-    `insert into documents(document_id, source_id, source_type, path, title,
-       content_hash, frontmatter_json, tags_json, links_json, modified_time_ms)
-     values(?, 'test', 'obsidian', ?, ?, '', '{}', ?, '[]', 0)`
-  );
-  tagSets.forEach((tags, i) => {
-    insert.run(`doc-${i}`, `note-${i}.md`, `Note ${i}`, JSON.stringify(tags));
-  });
-  db.close();
+    tagSets.forEach((tags, i) => {
+      insert.run(`doc-${i}`, `note-${i}.md`, `Note ${i}`, JSON.stringify(tags));
+    });
+  } finally {
+    db.close();
+  }
 }
 
 describe("extractHotwords", () => {
   it("returns empty array when index does not exist", async () => {
-    const { extractHotwords } = await import("./hotwords");
     await withTempDir("hotwords", async (dir) => {
       const result = extractHotwords({ indexPath: path.join(dir, "nonexistent.sqlite") });
       expect(result).toEqual([]);
@@ -47,7 +50,6 @@ describe("extractHotwords", () => {
   });
 
   it("extracts tags from documents in the index", async () => {
-    const { extractHotwords } = await import("./hotwords");
     await withTempDir("hotwords", async (dir) => {
       const indexPath = path.join(dir, "test.sqlite");
       seedDb(indexPath, [["人工智能", "机器学习"]]);
@@ -58,7 +60,6 @@ describe("extractHotwords", () => {
   });
 
   it("deduplicates tags across documents", async () => {
-    const { extractHotwords } = await import("./hotwords");
     await withTempDir("hotwords", async (dir) => {
       const indexPath = path.join(dir, "test.sqlite");
       seedDb(indexPath, [["人工智能"], ["人工智能", "深度学习"]]);
@@ -69,7 +70,6 @@ describe("extractHotwords", () => {
   });
 
   it("filters to pure CJK characters only", async () => {
-    const { extractHotwords } = await import("./hotwords");
     await withTempDir("hotwords", async (dir) => {
       const indexPath = path.join(dir, "test.sqlite");
       seedDb(indexPath, [["人工智能", "AI", "机器学习123", "深度学习/神经网络"]]);
@@ -82,7 +82,6 @@ describe("extractHotwords", () => {
   });
 
   it("filters to tags with 7 or fewer characters", async () => {
-    const { extractHotwords } = await import("./hotwords");
     await withTempDir("hotwords", async (dir) => {
       const indexPath = path.join(dir, "test.sqlite");
       seedDb(indexPath, [["短词", "刚好七个字没问题", "这是超过七个字的标签应该被过滤"]]);
@@ -94,7 +93,6 @@ describe("extractHotwords", () => {
   });
 
   it("sorts by frequency descending then alphabetically", async () => {
-    const { extractHotwords } = await import("./hotwords");
     await withTempDir("hotwords", async (dir) => {
       const indexPath = path.join(dir, "test.sqlite");
       seedDb(indexPath, [
@@ -106,6 +104,19 @@ describe("extractHotwords", () => {
       expect(result[0]).toBe("算法");      // 3 docs
       expect(result[1]).toBe("数据结构");   // 2 docs
       expect(result[2]).toBe("编程");       // 1 doc
+    });
+  });
+
+  it("sorts alphabetically on frequency ties", async () => {
+    await withTempDir("hotwords", async (dir) => {
+      const indexPath = path.join(dir, "test.sqlite");
+      // Both tags appear once, "编程" should sort before "算法"
+      seedDb(indexPath, [
+        ["算法"],
+        ["编程"]
+      ]);
+      const result = extractHotwords({ indexPath });
+      expect(result).toEqual(["编程", "算法"]);
     });
   });
 });
