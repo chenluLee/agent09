@@ -82,8 +82,8 @@ app.post("/config", async (request) => {
 });
 
 app.post("/asr/connect-url", async (request) => {
-  const body = z.object({ appId: z.string().min(1), apiKey: z.string().min(1) }).parse(request.body);
-  return { url: buildIflytekAuthUrl(body.appId, body.apiKey) };
+  const body = z.object({ appId: z.string().min(1), apiKey: z.string().min(1), apiSecret: z.string().min(1) }).parse(request.body);
+  return { url: buildIflytekAuthUrl(body.appId, body.apiKey, body.apiSecret) };
 });
 
 await app.listen({ host: "127.0.0.1", port });

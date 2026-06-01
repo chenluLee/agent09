@@ -70,13 +70,13 @@ describe("createFetchCommands config commands", () => {
   it("getAsrConnectUrl posts credentials and returns URL", async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
-      json: async () => ({ url: "wss://rtasr.xfyun.cn/v1/ws?appid=test" })
+      json: async () => ({ url: "wss://office-api-ast-dx.iflyaisol.com/ast/communicate/v1?appId=test" })
     }));
     vi.stubGlobal("fetch", fetchMock);
 
     const commands = createFetchCommands("http://test", { openUri: false });
-    const url = await commands.getAsrConnectUrl("test-app-id", "test-api-key");
-    expect(url).toBe("wss://rtasr.xfyun.cn/v1/ws?appid=test");
+    const url = await commands.getAsrConnectUrl("test-app-id", "test-api-key", "test-api-secret");
+    expect(url).toBe("wss://office-api-ast-dx.iflyaisol.com/ast/communicate/v1?appId=test");
     expect((fetchMock.mock.calls as string[][])[0][0]).toBe("http://test/asr/connect-url");
   });
 });

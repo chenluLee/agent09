@@ -9,7 +9,7 @@ export interface DemoCommands {
   openObsidianUri(filePath: string): Promise<string>;
   getConfig(): Promise<Record<string, unknown>>;
   saveConfig(config: Record<string, unknown>): Promise<Record<string, unknown>>;
-  getAsrConnectUrl(appId: string, apiKey: string): Promise<string>;
+  getAsrConnectUrl(appId: string, apiKey: string, apiSecret: string): Promise<string>;
 }
 
 interface FetchCommandOptions {
@@ -43,8 +43,8 @@ export function createFetchCommands(baseUrl = "http://127.0.0.1:3760", options: 
     saveConfig(config: Record<string, unknown>) {
       return post(`${baseUrl}/config`, config);
     },
-    async getAsrConnectUrl(appId: string, apiKey: string) {
-      const result = await post<{ url: string }>(`${baseUrl}/asr/connect-url`, { appId, apiKey });
+    async getAsrConnectUrl(appId: string, apiKey: string, apiSecret: string) {
+      const result = await post<{ url: string }>(`${baseUrl}/asr/connect-url`, { appId, apiKey, apiSecret });
       return result.url;
     }
   };

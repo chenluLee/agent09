@@ -31,21 +31,39 @@ export interface AsrMessage {
   sid?: string;
 }
 
-/** Parsed word from iFlytek ASR result. */
-export interface AsrWord {
+/** Parsed word from rtasr-llm result (cw level). */
+export interface AsrLlmCw {
   w: string;
   wp: string;
-  wb: number;
-  we: number;
+  wb?: number;
+  we?: number;
+  rl?: number;
+  lg?: string;
 }
 
-/** Parsed data from iFlytek ASR result data field. */
-export interface AsrResultData {
-  bg: number;
-  ed: number;
+/** Parsed word group from rtasr-llm result (ws level). */
+export interface AsrLlmWs {
+  cw: AsrLlmCw[];
+}
+
+/** Parsed real-time result from rtasr-llm (rt level). */
+export interface AsrLlmRt {
+  ws: AsrLlmWs[];
+}
+
+/** Parsed sentence from rtasr-llm result (st level). */
+export interface AsrLlmSt {
+  rt: AsrLlmRt;
   type: number;
+  bg?: number;
+  ed?: number;
+}
+
+/** Parsed result data from rtasr-llm (top-level data field). */
+export interface AsrLlmResultData {
+  cn: {
+    st: AsrLlmSt;
+  };
   seg_id: number;
-  w?: AsrWord[];
-  bg_str?: string;
-  ed_str?: string;
+  ls: boolean;
 }

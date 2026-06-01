@@ -54,13 +54,14 @@ export function PopupApp() {
       const config = (await commands.getConfig()) as unknown as AppConfig;
       const appId = config.iflytek?.appId;
       const apiKey = config.iflytek?.apiKey;
+      const apiSecret = config.iflytek?.apiSecret;
 
-      if (!appId || !apiKey) {
+      if (!appId || !apiKey || !apiSecret) {
         transition("ERROR", { error: "请先在设置中配置 iFlytek 凭证。" });
         return;
       }
 
-      const url = await commands.getAsrConnectUrl(appId, apiKey);
+      const url = await commands.getAsrConnectUrl(appId, apiKey, apiSecret);
       await asrProviderRef.current.connect(url);
 
       audioStreamRef.current = await navigator.mediaDevices.getUserMedia({
@@ -116,16 +117,16 @@ export function PopupApp() {
     if (state === "RESULTS" || state === "ERROR") {
       const timer = setTimeout(() => {
         transition("IDLE");
-        tryCloseWindow();
+        tryHideWindow();
       }, context.autoCloseTimerMs);
       return () => clearTimeout(timer);
     }
   }, [state]);
 
-  async function tryCloseWindow() {
+  async function tryHideWindow() {
     try {
       const { getCurrentWindow } = await import("@tauri-apps/api/window");
-      await getCurrentWindow().close();
+      await getCurrentWindow().hide();
     } catch {
       // Not in Tauri environment
     }
@@ -133,7 +134,7 @@ export function PopupApp() {
 
   function handleDismiss() {
     transition("IDLE");
-    tryCloseWindow();
+    tryHideWindow();
   }
 
   if (state === "IDLE") {

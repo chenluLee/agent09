@@ -15,16 +15,19 @@ describe("server config endpoint schema", () => {
     });
   });
 
-  it("validates ASR connect-url request body requires appId and apiKey", () => {
+  it("validates ASR connect-url request body requires appId, apiKey, and apiSecret", () => {
     const schema = z.object({
       appId: z.string().min(1),
-      apiKey: z.string().min(1)
+      apiKey: z.string().min(1),
+      apiSecret: z.string().min(1)
     });
 
     expect(() => schema.parse({})).toThrow();
-    expect(schema.parse({ appId: "test", apiKey: "key" })).toEqual({
+    expect(() => schema.parse({ appId: "test", apiKey: "key" })).toThrow();
+    expect(schema.parse({ appId: "test", apiKey: "key", apiSecret: "secret" })).toEqual({
       appId: "test",
-      apiKey: "key"
+      apiKey: "key",
+      apiSecret: "secret"
     });
   });
 });

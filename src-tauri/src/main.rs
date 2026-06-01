@@ -2,7 +2,7 @@ use serde::Deserialize;
 use tauri::{
     Emitter, Manager,
     menu::{Menu, MenuItem},
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    tray::TrayIconBuilder,
     webview::WebviewWindowBuilder,
     WebviewUrl,
 };
@@ -123,17 +123,6 @@ fn main() {
                     "debug" => show_debug_window(app),
                     "quit" => app.exit(0),
                     _ => {}
-                })
-                .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click {
-                        button: MouseButton::Left,
-                        button_state: MouseButtonState::Up,
-                        ..
-                    } = event
-                    {
-                        let app = tray.app_handle();
-                        show_popup_window(app);
-                    }
                 })
                 .build(app)?;
 

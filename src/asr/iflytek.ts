@@ -1,4 +1,4 @@
-import type { AsrMessage, AsrResultData } from "./types";
+import type { AsrMessage, AsrLlmResultData } from "./types";
 
 export class IflytekAsrProvider {
   private ws: WebSocket | null = null;
@@ -68,8 +68,8 @@ export class IflytekAsrProvider {
       this.rejectFinish = reject;
 
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        const endMarker = new Uint8Array([0x00, 0x00, 0x00, 0x00]);
-        this.ws.send(endMarker.buffer);
+        // rtasr-llm: send JSON text message as end marker
+        this.ws.send(JSON.stringify({ end: true }));
       }
 
       if (this.finalResultReceived) {
@@ -89,22 +89,35 @@ export class IflytekAsrProvider {
     this.rejectFinish = null;
   }
 
+  /**
+   * Parse rtasr-llm result data.
+   * Structure: data.cn.st.rt.ws[].cw[].{w, wp}
+   * - type=0: confirmed result (accumulate)
+   * - type=1: intermediate result (ignore)
+   * - ls=true: last segment
+   */
   private handleResult(dataStr: string): void {
     try {
-      const data: AsrResultData = JSON.parse(dataStr);
-      if (data.type === 0) {
-        const words = data.w ?? [];
-        const text = words
-          .filter((w) => w.wp === "n")
-          .map((w) => w.w)
-          .join("");
-        this.collectedText += text;
+      const data: AsrLlmResultData = JSON.parse(dataStr);
+      const st = data.cn?.st;
+      if (!st || st.type !== 0) {
+        // Skip intermediate results (type=1)
+        return;
+      }
 
-        if (words.length === 0) {
-          this.finalResultReceived = true;
-          if (this.resolveFinish) {
-            this.resolveFinish(this.collectedText);
-          }
+      // Collect all words from ws[].cw[]
+      const words = st.rt?.ws?.flatMap((ws) => ws?.cw ?? []) ?? [];
+      const text = words
+        .filter((cw) => cw.wp === "n" || cw.wp === "p")
+        .map((cw) => cw.w)
+        .join("");
+      this.collectedText += text;
+
+      // ls=true signals the last segment
+      if (data.ls) {
+        this.finalResultReceived = true;
+        if (this.resolveFinish) {
+          this.resolveFinish(this.collectedText);
         }
       }
     } catch {

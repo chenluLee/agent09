@@ -15,9 +15,5 @@
   "bundle": {
     "active": false
   },
-  "plugins": {
-    "global-shortcut": {
-      "shortcuts": ["Ctrl+Shift+Space"]
-    }
-  }
+  "plugins": {}
 }
