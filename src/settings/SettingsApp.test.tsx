@@ -32,4 +32,10 @@ describe("SettingsApp", () => {
     render(<SettingsApp />);
     expect(screen.getByText("索引知识库")).toBeInTheDocument();
   });
+
+  it("renders hotword section", () => {
+    render(<SettingsApp />);
+    expect(screen.getByText("热词管理")).toBeInTheDocument();
+    expect(screen.getByText("提取热词")).toBeInTheDocument();
+  });
 });

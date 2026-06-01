@@ -16,6 +16,8 @@ const defaultConfig: AppConfig = {
 export function SettingsApp() {
   const [config, setConfig] = useState<AppConfig>(defaultConfig);
   const [status, setStatus] = useState("加载中...");
+  const [hotwords, setHotwords] = useState<string[]>([]);
+  const [hotwordStatus, setHotwordStatus] = useState("");
 
   useEffect(() => {
     void loadConfig();
@@ -48,6 +50,26 @@ export function SettingsApp() {
       setStatus(`已索引 ${stats.documentCount} 篇笔记，共 ${stats.chunkCount} 个片段。`);
     } catch {
       setStatus("索引失败，请检查知识库路径。");
+    }
+  }
+
+  async function handleExtractHotwords() {
+    try {
+      setHotwordStatus("正在提取...");
+      const result = await commands.getHotwords();
+      setHotwords(result);
+      setHotwordStatus(result.length > 0 ? `已提取 ${result.length} 个热词。` : "未找到符合条件的热词。");
+    } catch {
+      setHotwordStatus("提取热词失败，请先索引知识库。");
+    }
+  }
+
+  async function handleCopyHotwords() {
+    try {
+      await navigator.clipboard.writeText(hotwords.join("\n"));
+      setHotwordStatus("已复制到剪贴板。");
+    } catch {
+      setHotwordStatus("复制失败。");
     }
   }
 
@@ -116,6 +138,29 @@ export function SettingsApp() {
             aria-label="API Secret"
           />
         </label>
+      </section>
+
+      <section className="settings-section">
+        <h2>热词管理</h2>
+        <p>从已索引的标签中提取纯中文、不超过 7 字的热词，用于讯飞语音识别热词表。</p>
+        <button className="settings-btn" type="button" onClick={handleExtractHotwords}>
+          <RefreshCw size={16} />
+          提取热词
+        </button>
+        {hotwords.length > 0 && (
+          <>
+            <textarea
+              value={hotwords.join("\n")}
+              readOnly
+              rows={Math.min(hotwords.length, 10)}
+              aria-label="热词列表"
+            />
+            <button className="settings-btn" type="button" onClick={handleCopyHotwords}>
+              复制到剪贴板
+            </button>
+          </>
+        )}
+        {hotwordStatus && <p>{hotwordStatus}</p>}
       </section>
 
       <footer>
